@@ -1,0 +1,95 @@
+{
+  "publish": {
+    "direct": [
+      {
+        "exchange": "argus",
+        "mapping": [
+          {
+            "queue": "offline.cal",
+            "routingKey": "argus.offline.cal"
+          },
+          {
+            "queue": "operation.activity",
+            "routingKey": "argus.operation.activity"
+          }
+        ]
+      },
+      {
+        "exchange": "redfoot",
+        "mapping": [
+          {
+            "queue": "offline.cal",
+            "routingKey": "redfoot.offline.cal"
+          },
+          {
+            "queue": "operation.activity",
+            "routingKey": "redfoot.operation.activity"
+          }
+        ]
+      }
+    ],
+    "topic": [
+      {
+        "exchange": "argus",
+        "mapping": [
+          {
+            "queue": "offline.cal",
+            "routingKey": "argus.offline.#"
+          },
+          {
+            "queue": "operation.activity",
+            "routingKey": "argus.#.activity"
+          }
+        ]
+      },
+      {
+        "exchange": "redfoot",
+        "mapping": [
+          {
+            "queue": "offline.cal",
+            "routingKey": "redfoot.offline.#"
+          },
+          {
+            "queue": "operation.activity",
+            "routingKey": "redfoot.#.activity"
+          }
+        ]
+      }
+    ],
+    "fanout": [
+      {
+        "exchange": "argus",
+        "mapping": [
+          {
+            "queue": "offline.cal",
+            "routingKey": ""
+          },
+          {
+            "queue": "operation.activity",
+            "routingKey": ""
+          }
+        ]
+      },
+      {
+        "exchange": "redfoot",
+        "mapping": [
+          {
+            "queue": "offline.cal",
+            "routingKey": ""
+          },
+          {
+            "queue": "operation.activity",
+            "routingKey": ""
+          }
+        ]
+      }
+    ]
+  },
+
+  "consumer": {
+    "queue": [
+      "operation.activity",
+      "offline.cal"
+    ]
+  }
+}
