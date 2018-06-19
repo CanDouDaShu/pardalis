@@ -8,11 +8,13 @@ class ZK {
     init() {
         return new Promise((resolve, reject) => {
             try {
-                this.zk = new ZooKeeper({
+                this.zk = new ZooKeeper();
+                this.zk.init({
                     connect: cfg.host,
                     timeout: cfg.timeout,
                     debug_level: ZooKeeper.ZOO_LOG_LEVEL_WARN,
-                    host_order_deterministic: cfg.host_order_deterministic
+                    host_order_deterministic: cfg.host_order_deterministic,
+
                 });
             }catch(err) {
                 return reject(err);
@@ -45,13 +47,12 @@ class ZK {
     createNode(val) {
         return new Promise((resolve, reject) => {
             return this.zk.a_create(val.path, val.data, val.zk_type, (rc, error, path) => {
-                if(rc == ZooKeeper.ZNODEEXISTS) {
-                    return resolve(ZooKeeper.ZNODEEXISTS);
+                switch(rc) {
+                    case ZooKeeper.ZOK:
+                        return resolve(path);
+                    default:
+                        return reject(rc);
                 }
-                if(rc != ZooKeeper.ZOK) {
-                    return reject(rc);
-                }
-                return resolve(path);
             });
         });
     }
@@ -63,12 +64,33 @@ class ZK {
     existed(val) {
         return new Promise((resolve, reject) => {
             return this.zk.a_exists(val.path, val.watch, (rc, error, stat) => {
-                if(rc == ZooKeeper.ZNONODE) {
-                    return reject(rc);
+                switch(rc) {
+                    case ZooKeeper.ZOK:
+                        return resolve(stat);
+                    default:
+                        return reject(rc);
                 }
-                if(rc == ZooKeeper.ZOK) {
-                    return resolve(stat);
-                }
+            });
+        });
+    }
+
+    existedWithWatcher(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.aw_exists(val.path,
+                (type, state, path) => {
+                    return resolve({
+                        type: type,
+                        state: state,
+                        path: path
+                    });
+                },
+                (rc, error, stat) => {
+                    switch(rc) {
+                        case ZooKeeper.ZOK:
+                            return resolve(stat);
+                        default:
+                            return reject(rc);
+                    }
             });
         });
     }
@@ -80,15 +102,39 @@ class ZK {
     getNodeInfo(val) {
         return new Promise((resolve, reject) => {
             return this.zk.a_get(val.path, val.watch, (rc, error, stat, data) => {
-                if(rc == ZooKeeper.ZNONODE) {
-                    return reject(rc);
+                switch(rc) {
+                    case ZooKeeper.ZOK:
+                        return resolve({
+                            stat: stat,
+                            data: data
+                        });
+                    default:
+                        return reject(rc);
                 }
-                if(rc == ZooKeeper.ZOK) {
+            });
+        });
+    }
+
+    getNodeInfoWithWatcher(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.aw_get(val.path,
+                (type, state, path) => {
                     return resolve({
-                        stat: stat,
-                        data: data
+                        type: type,
+                        state: state,
+                        path: path
                     });
-                }
+                },
+                (rc, error, stat, data) => {
+                    switch(rc) {
+                        case ZooKeeper.ZOK:
+                            return resolve({
+                                stat: stat,
+                                data: data
+                            });
+                        default:
+                            return reject(rc);
+                    }
             });
         });
     }
@@ -100,13 +146,34 @@ class ZK {
     getChildrenInfo(val) {
         return new Promise((resolve, reject) => {
             return this.zk.a_get_children(val.path, val.watch, (rc, error, children) => {
-                if(rc == ZooKeeper.ZNONODE) {
-                    return reject(rc);
-                }
-                if(rc == ZooKeeper.ZOK) {
-                    return resolve(children);
+                switch(rc) {
+                    case ZooKeeper.ZOK:
+                        return resolve(children);
+                    default:
+                        return reject(rc);
                 }
             });
+        });
+    }
+
+    getChildrenInfoWithWatcher(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.aw_get_children(val.path,
+                (type, state, path) => {
+                    return resolve({
+                        type: type,
+                        state: state,
+                        path: path
+                    });
+                },
+                (rc, error, children) => {
+                    switch(rc) {
+                        case ZooKeeper.ZOK:
+                            return resolve(children);
+                        default:
+                            return reject(rc);
+                    }
+                });
         });
     }
 
@@ -117,24 +184,91 @@ class ZK {
     getChildrenInfoWithStat(val) {
         return new Promise((resolve, reject) => {
             return this.zk.a_get_children2(val.path, val.watch, (rc, error, children, stat) => {
-                if(rc == ZooKeeper.ZNONODE) {
-                    return reject(rc);
-                }
-                if(rc == ZooKeeper.ZOK) {
-                    return resolve({
-                        children: children,
-                        stat: stat
-                    });
+                switch(rc) {
+                    case ZooKeeper.ZOK:
+                        return resolve({
+                            children: children,
+                            stat: stat
+                        });
+                    default:
+                        return reject(rc);
                 }
             });
         });
     }
 
+    getChildrenInfoWithStatAndWatcher(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.aw_get_children2(val.path,
+                (type, state, path) => {
+                    return resolve({
+                        type: type,
+                        state: state,
+                        path: path
+                    });
+                },
+                (rc, error, children, stat) => {
+                    switch(rc) {
+                        case ZooKeeper.ZOK:
+                            return resolve({
+                                children: children,
+                                stat: stat
+                            });
+                        default:
+                            return reject(rc);
+                    }
+                });
+        });
+    }
+
     setNodeInfo(val) {
         return new Promise((resolve, reject) => {
-            return this.zk.a_set(val.path, val.data, val.version, (rc, error, stat) => {
-                console.log(rc);
-                console.log(stat);
+            return this.zk.a_set(val.path, val.data, -1, (rc, error, stat) => {
+                switch(rc) {
+                    case ZooKeeper.ZOK:
+                        return resolve(stat);
+                    default:
+                        return reject(rc);
+                }
+            });
+        });
+    }
+
+    deleteNode(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.a_delete_(val.path, -1, (rc, error) => {
+                switch(rc) {
+                    case ZooKeeper.ZOK:
+                        return resolve(rc);
+                    default:
+                        return reject(rc);
+                }
+            });
+        });
+    }
+
+    setNodeAcl(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.a_set_acl(val.path, -1, val.acl, (rc, error) => {
+                switch(rc) {
+                    case ZooKeeper.ZOK:
+                        return resolve(rc);
+                    default:
+                        return reject(rc);
+                }
+            });
+        });
+    }
+
+    getNodeAcl(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.a_get_acl(val.path, (rc, error, acl, stat) => {
+                switch(rc) {
+                    case ZooKeeper.ZOK:
+                        return resolve({acl: acl, stat: stat});
+                    default:
+                        return reject(rc);
+                }
             });
         });
     }
