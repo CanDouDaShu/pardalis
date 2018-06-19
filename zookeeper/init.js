@@ -73,8 +73,71 @@ class ZK {
         });
     }
 
-    getNodeInfo() {}
+    /**
+     *
+     * @param val {path: String, watch: boolean}
+     */
+    getNodeInfo(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.a_get(val.path, val.watch, (rc, error, stat, data) => {
+                if(rc == ZooKeeper.ZNONODE) {
+                    return reject(rc);
+                }
+                if(rc == ZooKeeper.ZOK) {
+                    return resolve({
+                        stat: stat,
+                        data: data
+                    });
+                }
+            });
+        });
+    }
 
+    /**
+     *
+     * @param val {path: String, watch: boolean}
+     */
+    getChildrenInfo(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.a_get_children(val.path, val.watch, (rc, error, children) => {
+                if(rc == ZooKeeper.ZNONODE) {
+                    return reject(rc);
+                }
+                if(rc == ZooKeeper.ZOK) {
+                    return resolve(children);
+                }
+            });
+        });
+    }
+
+    /**
+     *
+     * @param val {path: String, watch: boolean}
+     */
+    getChildrenInfoWithStat(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.a_get_children2(val.path, val.watch, (rc, error, children, stat) => {
+                if(rc == ZooKeeper.ZNONODE) {
+                    return reject(rc);
+                }
+                if(rc == ZooKeeper.ZOK) {
+                    return resolve({
+                        children: children,
+                        stat: stat
+                    });
+                }
+            });
+        });
+    }
+
+    setNodeInfo(val) {
+        return new Promise((resolve, reject) => {
+            return this.zk.a_set(val.path, val.data, val.version, (rc, error, stat) => {
+                console.log(rc);
+                console.log(stat);
+            });
+        });
+    }
 }
 
 
