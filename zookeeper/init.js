@@ -1,21 +1,28 @@
+'use strict'
 const ZooKeeper = require ("zookeeper");
 const Promise = require("bluebird");
 const cfg = require("./cfg.json");
 
 class ZK {
-    constructor() {}
+    constructor() {
+        this.zk = null;
+    }
 
     init() {
         return new Promise((resolve, reject) => {
             try {
-                this.zk = new ZooKeeper();
-                this.zk.init({
+                this.zk = new ZooKeeper({
                     connect: cfg.host,
                     timeout: cfg.timeout,
                     debug_level: ZooKeeper.ZOO_LOG_LEVEL_WARN,
                     host_order_deterministic: cfg.host_order_deterministic,
-
                 });
+                // this.zk.init({
+                //     connect: cfg.host,
+                //     timeout: cfg.timeout,
+                //     debug_level: ZooKeeper.ZOO_LOG_LEVEL_WARN,
+                //     host_order_deterministic: cfg.host_order_deterministic,
+                // });
             }catch(err) {
                 return reject(err);
             }

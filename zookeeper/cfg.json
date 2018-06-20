@@ -1,6 +1,6 @@
 {
   "host": "localhost:2181",
-  "timeout": 200000,
+  "timeout": 1000,
   "host_order_deterministic": false,
   "debug_level": "ZOO_LOG_LEVEL_WARN"
 }
